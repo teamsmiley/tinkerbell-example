@@ -2,11 +2,11 @@
 apiVersion: "tinkerbell.org/v1alpha1"
 kind: Template
 metadata:
-  name: ubuntu-22
+  name: test
 spec:
   data: |
     version: "0.1"
-    name: ubuntu-22
+    name: test
     global_timeout: 1800
     tasks:
       - name: "os installation"

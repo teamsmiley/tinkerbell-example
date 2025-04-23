@@ -1,14 +1,14 @@
 apiVersion: "tinkerbell.org/v1alpha1"
 kind: Hardware
 metadata:
-  name: test2
+  name: test
 spec:
   disks:
     - device: /dev/vda 
   interfaces:
     - dhcp:
         arch: x86_64
-        hostname: test2
+        hostname: test
         ip:
           address: 192.168.122.13
           netmask: 255.255.255.0
