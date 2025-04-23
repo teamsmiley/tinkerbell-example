@@ -3,45 +3,6 @@ kind: Hardware
 metadata:
   name: test2
 spec:
-  userData: |
-    #cloud-config
-    ssh_pwauth: true
-    disable_root: false
-    users:
-      - name: root
-        plain_text_passwd: ragon
-        lock_passwd: false
-        ssh_authorized_keys:
-          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCpLOZfSxSucnqv5cz1iMbobBkUAzzGABK7h8vQuGMe60RVSJOdOBSeO7eUtzkTq4CGgpZCeD89bJl1LBjt8LGBnlEkV+T17WnLf9bRSLJgJ/WosbcKwTnHJBi0DdLXMo63EYGQ1T2401gw5egfICgLyQOsu07caZodGMnRqKyQ6r9zIenyqM+o+hLrmycOoQOUmWjqqNvlhyjU9uTTHLNhtcT2daFzC4r6LNIHiaZpnJlbdGIS6I7yNIVlnL2Y2Xqy0nUXJ/G5Yyy3gYltNS0r2EuQtyRrzbRnOkQrgaKJKOCcw4wLRRgdfhJk+7lVwIZ1Bd7NNFWF1nAE1nOtceZJ
-    write_files:
-      - path: /etc/sysctl.d/70-disable-ipv6.conf
-        content: |
-          net.ipv6.conf.all.disable_ipv6 = 1
-          net.ipv6.conf.default.disable_ipv6 = 1
-      - path: /etc/selinux/config
-        content: |
-          SELINUX=disabled
-          SELINUXTYPE=targeted
-    network:
-      version: 2
-      renderer: NetworkManager
-      ethernets:
-        eth0:
-          dhcp4: false
-          addresses: [192.168.254.13/24]
-          gateway4: 192.168.254.254
-          nameservers:
-            addresses: [8.8.8.8, 1.1.1.1]
-    runcmd:
-      - date >> /tmp/birth_certificate
-      - systemctl enable --now serial-getty@ttyS0.service
-      - reboot
-  metadata:
-    facility:
-      facility_code: dia
-    instance:
-      hostname: test2
-      id: 52:54:00:ff:54:38
   disks:
     - device: /dev/vda 
   interfaces:
@@ -49,9 +10,9 @@ spec:
         arch: x86_64
         hostname: test2
         ip:
-          address: 192.168.254.13
+          address: 192.168.122.13
           netmask: 255.255.255.0
-          gateway: 192.168.254.254
+          gateway: 192.168.122.1
         lease_time: 86400
         mac: 52:54:00:ff:54:38
         name_servers:
