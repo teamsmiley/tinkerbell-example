@@ -2,11 +2,11 @@
 apiVersion: "tinkerbell.org/v1alpha1"
 kind: Template
 metadata:
-  name: almalinux
+  name: oraclelinux-95
 spec:
   data: |
     version: "0.1"
-    name: almalinux
+    name: oraclelinux-95
     global_timeout: 1800
     tasks:
       - name: "os installation"
@@ -16,12 +16,12 @@ spec:
           - /dev/console:/dev/console
           - /lib/firmware:/lib/firmware:ro
         actions:
-          - name: "Stream Alma Linux 8.10 image"
+          - name: "Stream Oracle Linux 9.5 image"
             image: quay.io/tinkerbell/actions/image2disk:latest
             timeout: 600
             environment:
               DEST_DISK: {{ index .Hardware.Disks 0 }}
-              IMG_URL: "http://192.168.254.251:8080/AlmaLinux-8-GenericCloud-8.10-20240819.x86_64.raw.gz"
+              IMG_URL: "http://192.168.254.251:8080/oraclelinux-810.raw.gz" #change me
               COMPRESSED: true
           - name: "grow-partition"
             image: quay.io/tinkerbell/actions/cexec:latest
@@ -31,31 +31,20 @@ spec:
               FS_TYPE: xfs
               CHROOT: y
               DEFAULT_INTERPRETER: "/bin/sh -c"
-              CMD_LINE: "growpart {{ index .Hardware.Disks 0 }} 4 && xfs_growfs {{ index .Hardware.Disks 0 }}4"
-          - name: "install package"
-            image: quay.io/tinkerbell/actions/cexec:latest
-            timeout: 90
-            environment:
-              BLOCK_DEVICE: {{ index .Hardware.Disks 0 }}4
-              FS_TYPE: xfs
-              CHROOT: y
-              DEFAULT_INTERPRETER: "/bin/sh -c"
-              # CMD_LINE: "dnf install zsh -y" #1차 시도
-              # CMD_LINE: "dnf install zsh -y &> /tmp/test.txt " #2차 시도
-              CMD_LINE: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && dnf install zsh -y &> /tmp/test.txt" #3차시도
+              CMD_LINE: "growpart {{ index .Hardware.Disks 0 }} 4 && pvresize {{ index .Hardware.Disks 0 }}4 && lvextend -r -l +100%FREE /dev/mapper/vg_main-lv_root"
           # - name: "kexec into os"
           #   image: ghcr.io/jacobweinstock/waitdaemon:latest
-          #   timeout: 180
+          #   timeout: 90
           #   pid: host
           #   environment:
           #     BLOCK_DEVICE: {{ formatPartition ( index .Hardware.Disks 0 ) 3 }}
           #     FS_TYPE: xfs
+          #     KERNEL_PATH=/boot/vmlinuz-5.15.0-306.177.4.el9uek.x86_64 \
+          #     INITRD_PATH=/boot/initramfs-5.15.0-306.177.4.el9uek.x86_64.img \
+          #     CMD_LINE="root=/dev/mapper/vg_main-lv_root ro" \
+          #     GRUBCFG_PATH=/boot/grub2/grub.cfg \
           #     IMAGE: quay.io/tinkerbell/actions/kexec:latest
           #     WAIT_SECONDS: 10
-          #     # KERNEL_PATH: /boot/vmlinuz-4.18.0-553.16.1.el8_10.x86_64
-          #     # INITRD_PATH: /boot/initramfs-4.18.0-553.16.1.el8_10.x86_64.img
-          #     # CMD_LINE: "root={{ formatPartition ( index .Hardware.Disks 0 ) 3 }} ro"
           #   volumes:
           #     - /var/run/docker.sock:/var/run/docker.sock
-
-
+          

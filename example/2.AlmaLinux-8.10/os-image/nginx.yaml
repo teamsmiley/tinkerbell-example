@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.27
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: hook-volume
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: hook-volume
+        hostPath:
+          path: /opt/hook
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kube-vip.io/vipHost: k3d-k3s-default-server-0
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  allocateLoadBalancerNodePorts: true
+  externalTrafficPolicy: Local
+  internalTrafficPolicy: Cluster
+  loadBalancerClass: kube-vip.io/kube-vip-class
+  loadBalancerIP: 192.168.254.251
+  selector:
+    app: nginx
+  type: LoadBalancer
+  ports:
+  - port: 8080
+    targetPort: 80

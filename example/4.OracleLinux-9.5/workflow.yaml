@@ -1,0 +1,9 @@
+apiVersion: "tinkerbell.org/v1alpha1"
+kind: Workflow
+metadata:
+  name: test
+spec:
+  templateRef: oraclelinux
+  hardwareRef: test
+  hardwareMap:
+    device_1: 52:54:00:ff:54:38

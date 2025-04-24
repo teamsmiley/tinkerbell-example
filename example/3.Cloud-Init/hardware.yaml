@@ -1,0 +1,63 @@
+apiVersion: "tinkerbell.org/v1alpha1"
+kind: Hardware
+metadata:
+  name: test
+spec:
+  userData: |
+    #cloud-config
+    ssh_pwauth: true
+    disable_root: false
+    users:
+      - name: root
+        plain_text_passwd: xxx # change
+        lock_passwd: false
+        ssh_authorized_keys:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC
+    write_files:
+      - path: /etc/sysctl.d/70-disable-ipv6.conf
+        content: |
+          net.ipv6.conf.all.disable_ipv6 = 1
+          net.ipv6.conf.default.disable_ipv6 = 1
+      - path: /etc/selinux/config
+        content: |
+          SELINUX=disabled
+          SELINUXTYPE=targeted
+    network:
+      version: 2
+      renderer: NetworkManager
+      ethernets:
+        eth0:
+          dhcp4: false
+          addresses: [192.168.254.252/24] # 주의 node ip와 같아야함.
+          gateway4: 192.168.254.254
+          nameservers:
+            addresses: [8.8.8.8, 1.1.1.1]
+    runcmd:
+      - date >> /tmp/birth_certificate
+      - systemctl enable --now serial-getty@ttyS0.service
+      - reboot
+  metadata:
+    facility:
+      facility_code: dia
+    instance:
+      hostname: test2
+      id: 52:54:00:ff:54:38
+  disks:
+    - device: /dev/vda 
+  interfaces:
+    - dhcp:
+        arch: x86_64
+        hostname: test
+        ip:
+          address: 192.168.254.252 # cloud init 설정과 같아야함
+          netmask: 255.255.255.0
+          gateway: 192.168.254.254
+        lease_time: 86400
+        mac: 52:54:00:ff:54:38
+        name_servers:
+          - 1.1.1.1
+          - 8.8.8.8
+        uefi: false
+      netboot:
+        allowPXE: true
+        allowWorkflow: true

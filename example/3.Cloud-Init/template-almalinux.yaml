@@ -40,9 +40,39 @@ spec:
               FS_TYPE: xfs
               CHROOT: y
               DEFAULT_INTERPRETER: "/bin/sh -c"
-              # CMD_LINE: "dnf install zsh -y" #1차 시도
-              # CMD_LINE: "dnf install zsh -y &> /tmp/test.txt " #2차 시도
-              CMD_LINE: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && dnf install zsh -y &> /tmp/test.txt" #3차시도
+              CMD_LINE: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && dnf install zsh -y &> /tmp/test.txt"
+          - name: "add cloud-init config"
+            image: quay.io/tinkerbell/actions/writefile:latest
+            timeout: 90
+            environment:
+              CONTENTS: |
+                datasource:
+                  Ec2:
+                    metadata_urls: ["http://192.168.254.201:50061"]
+                    strict_id: false
+                manage_etc_hosts: localhost
+                warnings:
+                  dsid_missing_source: off      
+              DEST_DISK: {{ formatPartition ( index .Hardware.Disks 0 ) 4 }}
+              DEST_PATH: /etc/cloud/cloud.cfg.d/10_tinkerbell.cfg
+              DIRMODE: "0700"
+              FS_TYPE: xfs
+              GID: "0"
+              MODE: "0600"
+              UID: "0"
+          - name: "add cloud-init ds-identity"
+            image: quay.io/tinkerbell/actions/writefile:latest
+            timeout: 90
+            environment:
+              DEST_DISK: {{ formatPartition ( index .Hardware.Disks 0 ) 4 }}
+              FS_TYPE: xfs
+              DEST_PATH: /etc/cloud/ds-identify.cfg
+              UID: 0
+              GID: 0
+              MODE: 0600
+              DIRMODE: 0700
+              CONTENTS: |
+                datasource: Ec2
           # - name: "kexec into os"
           #   image: ghcr.io/jacobweinstock/waitdaemon:latest
           #   timeout: 180
