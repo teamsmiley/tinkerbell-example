@@ -1,7 +1,5 @@
 # Tinkerbell Example
 
-baremetal provisoner Tinkerbell을 소개합니다.
-
 1. [Prerequisites](0.Prerequisites.md)
 2. [Basic Install](1.Basic.md')
 3. [Basic Addon](1.1Basic-addon.md)
