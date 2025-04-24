@@ -2,11 +2,11 @@
 apiVersion: "tinkerbell.org/v1alpha1"
 kind: Template
 metadata:
-  name: almalinux-810
+  name: almalinux
 spec:
   data: |
     version: "0.1"
-    name: almalinux-810
+    name: almalinux
     global_timeout: 1800
     tasks:
       - name: "os installation"
