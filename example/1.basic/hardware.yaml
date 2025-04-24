@@ -12,7 +12,7 @@ spec:
         ip:
           address: 192.168.254.252
           netmask: 255.255.255.0
-          gateway: 192.168.254.1
+          gateway: 192.168.254.254
         lease_time: 86400
         mac: 52:54:00:ff:54:38
         name_servers:
