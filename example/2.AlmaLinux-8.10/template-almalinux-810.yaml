@@ -1,0 +1,93 @@
+---
+apiVersion: "tinkerbell.org/v1alpha1"
+kind: Template
+metadata:
+  name: almalinux-810
+spec:
+  data: |
+    version: "0.1"
+    name: almalinux-810
+    global_timeout: 1800
+    tasks:
+      - name: "os installation"
+        worker: "{{.device_1}}"
+        volumes:
+          - /dev:/dev
+          - /dev/console:/dev/console
+          - /lib/firmware:/lib/firmware:ro
+        actions:
+          - name: "Stream Alma Linux 8.10 image"
+            image: quay.io/tinkerbell/actions/image2disk:latest
+            timeout: 600
+            environment:
+              DEST_DISK: {{ index .Hardware.Disks 0 }}
+              # IMG_URL: "http://192.168.254.203:8080/AlmaLinux-8-GenericCloud-8.10-20240819.x86_64.raw.gz"
+              # IMG_URL: "http://192.168.254.203:8080/AlmaLinux-8-OpenNebula-8.10-20240819.x86_64.raw.gz"
+              IMG_URL: "http://192.168.254.203:8080/alma810.raw.gz"
+              COMPRESSED: true
+          - name: "grow-partition"
+            image: quay.io/tinkerbell/actions/cexec:latest
+            timeout: 90
+            environment:
+              BLOCK_DEVICE: {{ index .Hardware.Disks 0 }}4
+              FS_TYPE: xfs
+              CHROOT: y
+              DEFAULT_INTERPRETER: "/bin/sh -c"
+              CMD_LINE: "growpart {{ index .Hardware.Disks 0 }} 4 && xfs_growfs {{ index .Hardware.Disks 0 }}4"
+          - name: "install package"
+            image: quay.io/tinkerbell/actions/cexec:latest
+            timeout: 90
+            environment:
+              BLOCK_DEVICE: {{ index .Hardware.Disks 0 }}4
+              FS_TYPE: xfs
+              CHROOT: y
+              DEFAULT_INTERPRETER: "/bin/sh -c"
+              CMD_LINE: "echo 'nameserver 8.8.8.8' > /etc/resolv.conf && dnf install zsh -y &> /tmp/test.txt"
+          - name: "add cloud-init config"
+            image: quay.io/tinkerbell/actions/writefile:latest
+            timeout: 90
+            environment:
+              CONTENTS: |
+                datasource:
+                  Ec2:
+                    metadata_urls: ["http://192.168.254.201:50061"]
+                    strict_id: false
+                manage_etc_hosts: localhost
+                warnings:
+                  dsid_missing_source: off      
+              DEST_DISK: {{ formatPartition ( index .Hardware.Disks 0 ) 4 }}
+              DEST_PATH: /etc/cloud/cloud.cfg.d/10_tinkerbell.cfg
+              DIRMODE: "0700"
+              FS_TYPE: xfs
+              GID: "0"
+              MODE: "0600"
+              UID: "0"
+          - name: "add cloud-init ds-identity"
+            image: quay.io/tinkerbell/actions/writefile:latest
+            timeout: 90
+            environment:
+              DEST_DISK: {{ formatPartition ( index .Hardware.Disks 0 ) 4 }}
+              FS_TYPE: xfs
+              DEST_PATH: /etc/cloud/ds-identify.cfg
+              UID: 0
+              GID: 0
+              MODE: 0600
+              DIRMODE: 0700
+              CONTENTS: |
+                datasource: Ec2
+          # - name: "kexec into os"
+          #   image: ghcr.io/jacobweinstock/waitdaemon:latest
+          #   timeout: 180
+          #   pid: host
+          #   environment:
+          #     BLOCK_DEVICE: {{ formatPartition ( index .Hardware.Disks 0 ) 3 }}
+          #     FS_TYPE: xfs
+          #     IMAGE: quay.io/tinkerbell/actions/kexec:latest
+          #     WAIT_SECONDS: 10
+          #     # KERNEL_PATH: /boot/vmlinuz-4.18.0-553.16.1.el8_10.x86_64
+          #     # INITRD_PATH: /boot/initramfs-4.18.0-553.16.1.el8_10.x86_64.img
+          #     # CMD_LINE: "root={{ formatPartition ( index .Hardware.Disks 0 ) 3 }} ro"
+          #   volumes:
+          #     - /var/run/docker.sock:/var/run/docker.sock
+
+
