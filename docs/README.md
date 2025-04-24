@@ -1,6 +1,8 @@
 # Tinkerbell Example
 
-1. [Prerequisites](0. Prerequisites.md)
+baremetal provisoner Tinkerbell을 소개합니다.
+
+1. [Prerequisites](<0. Prerequisites.md>)
 2. [Basic Install](1. Basic.md)
 3. [Basic Addon](1.1 Basic-addon.md)
 4. [AlmaLinux](2. AlmaLinux.md)
