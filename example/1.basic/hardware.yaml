@@ -10,7 +10,7 @@ spec:
         arch: x86_64
         hostname: test
         ip:
-          address: 192.168.254.101
+          address: 192.168.254.252
           netmask: 255.255.255.0
           gateway: 192.168.254.1
         lease_time: 86400
