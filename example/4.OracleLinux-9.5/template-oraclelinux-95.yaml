@@ -21,7 +21,7 @@ spec:
             timeout: 600
             environment:
               DEST_DISK: {{ index .Hardware.Disks 0 }}
-              IMG_URL: "http://192.168.254.203:8080/OL9U5_x86_64-kvm-b259.raw.gz"
+              IMG_URL: "http://192.168.254.251:8080/OL9U5_x86_64-kvm-b259.raw.gz"
               COMPRESSED: true
           - name: activate lvm volume group
             image: oraclelinux:9
