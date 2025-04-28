@@ -16,35 +16,59 @@ spec:
           - /dev/console:/dev/console
           - /lib/firmware:/lib/firmware:ro
         actions:
-          - name: "Stream Oracle Linux 9.5 image"
+          - name: Stream Oracle Linux 9.5 image
             image: quay.io/tinkerbell/actions/image2disk:latest
             timeout: 600
             environment:
               DEST_DISK: {{ index .Hardware.Disks 0 }}
-              IMG_URL: "http://192.168.254.251:8080/OL9U5_x86_64-kvm-b259.raw.gz" #change me
+              IMG_URL: "http://192.168.254.203:8080/OL9U5_x86_64-kvm-b259.raw.gz"
               COMPRESSED: true
-          - name: "grow-partition"
-            image: quay.io/tinkerbell/actions/cexec:latest
+          - name: activate lvm volume group
+            image: oraclelinux:9
+            timeout: 600
+            pid: host
+            command: [ "sh", "-c", "dnf install -y lvm2 && vgscan --mknodes && vgchange -ay && dmsetup mknodes" ]
+          - name: add cloud-init config
+            image: quay.io/tinkerbell/actions/writefile:latest
             timeout: 90
             environment:
-              BLOCK_DEVICE: {{ index .Hardware.Disks 0 }}4
+              CONTENTS: |
+                datasource:
+                  Ec2:
+                    metadata_urls: ["http://192.168.254.201:50061"]
+                    strict_id: false
+                manage_etc_hosts: localhost
+                warnings:
+                  dsid_missing_source: off      
+              DEST_DISK: /dev/mapper/vg_main-lv_root
+              DEST_PATH: /etc/cloud/cloud.cfg.d/10_tinkerbell.cfg
+              DIRMODE: "0700"
               FS_TYPE: xfs
-              CHROOT: y
-              DEFAULT_INTERPRETER: "/bin/sh -c"
-              CMD_LINE: "growpart {{ index .Hardware.Disks 0 }} 4 && pvresize {{ index .Hardware.Disks 0 }}4 && lvextend -r -l +100%FREE /dev/mapper/vg_main-lv_root"
+              GID: "0"
+              MODE: "0600"
+              UID: "0"
+          - name: "add cloud-init ds-identity"
+            image: quay.io/tinkerbell/actions/writefile:latest
+            timeout: 90
+            environment:
+              DEST_DISK: /dev/mapper/vg_main-lv_root
+              FS_TYPE: xfs
+              DEST_PATH: /etc/cloud/ds-identify.cfg
+              UID: 0
+              GID: 0
+              MODE: 0600
+              DIRMODE: 0700
+              CONTENTS: |
+                datasource: Ec2
           # - name: "kexec into os"
           #   image: ghcr.io/jacobweinstock/waitdaemon:latest
-          #   timeout: 90
+          #   timeout: 180
           #   pid: host
           #   environment:
-          #     BLOCK_DEVICE: {{ formatPartition ( index .Hardware.Disks 0 ) 3 }}
+          #     BLOCK_DEVICE: /dev/mapper/vg_main-lv_root
           #     FS_TYPE: xfs
-          #     KERNEL_PATH=/boot/vmlinuz-5.15.0-306.177.4.el9uek.x86_64 \
-          #     INITRD_PATH=/boot/initramfs-5.15.0-306.177.4.el9uek.x86_64.img \
-          #     CMD_LINE="root=/dev/mapper/vg_main-lv_root ro" \
-          #     GRUBCFG_PATH=/boot/grub2/grub.cfg \
           #     IMAGE: quay.io/tinkerbell/actions/kexec:latest
           #     WAIT_SECONDS: 10
+          #     GRUBCFG_PATH: /boot/grub2/grub.cfg
           #   volumes:
           #     - /var/run/docker.sock:/var/run/docker.sock
-          
